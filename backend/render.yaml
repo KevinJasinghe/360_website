@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: piano-transcription-api
+    env: python
+    region: oregon
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app_production:app
+    plan: free
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: MAX_CONTENT_LENGTH
+        value: 52428800  # 50MB
+      - key: MAX_AUDIO_DURATION
+        value: 300  # 5 minutes
+      - key: MAX_YOUTUBE_DURATION
+        value: 300  # 5 minutes
+      - key: UPLOAD_FOLDER
+        value: /tmp/uploads
+      - key: CLEANUP_INTERVAL
+        value: 1800  # 30 minutes
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: SECRET_KEY
+        generateValue: true
+    healthCheckPath: /health

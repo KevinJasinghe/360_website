@@ -1,0 +1,35 @@
+# Development files
+app.py
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+.env
+
+# Logs
+logs/
+*.log
+
+# Upload directories
+../uploads/
+uploads/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model weights (should be downloaded separately)
+weights/*.pth
+
+# Development dependencies
+requirements.txt

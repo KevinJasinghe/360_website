@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  audio-to-midi:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - MAX_CONTENT_LENGTH=52428800  # 50MB
+    volumes:
+      - uploads_data:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.audio-to-midi.rule=Host(`your-domain.com`)"
+      - "traefik.http.routers.audio-to-midi.tls=true"
+      - "traefik.http.routers.audio-to-midi.tls.certresolver=letsencrypt"
+
+volumes:
+  uploads_data:

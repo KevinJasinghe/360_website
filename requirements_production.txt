@@ -1,0 +1,27 @@
+# Production Flask dependencies
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-RESTful==0.3.10
+gunicorn==21.2.0
+
+# File processing
+yt-dlp>=2025.8.11
+ffmpeg-python==0.2.0
+
+# AI/ML dependencies
+torch>=1.9.0,<3.0.0
+librosa>=0.8.0,<1.0.0
+soundfile>=0.10.0
+numpy>=1.20.0,<2.0.0
+pretty_midi>=0.2.9
+
+# Performance optimizations
+numba>=0.56.0
+
+# Production dependencies
+requests>=2.31.0
+Werkzeug>=2.3.7
+
+# System dependencies for audio processing
+# Note: These may need to be installed via system packages on Render
+# audioread>=2.1.9

@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+.DS_Store
+*.pyc
+__pycache__
+.pytest_cache
+.coverage
+uploads/*
+!uploads/.gitkeep
+frontend/build
+backend/uploads/*
+!backend/uploads/.gitkeep

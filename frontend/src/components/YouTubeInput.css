@@ -1,0 +1,209 @@
+.youtube-input-container {
+  max-width: 100%;
+}
+
+.youtube-input-info {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.youtube-input-info h3 {
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.youtube-input-info p {
+  margin: 0.5rem 0;
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+.url-input-section {
+  margin-bottom: 2rem;
+}
+
+.input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.url-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.url-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.url-input:disabled {
+  background-color: #f7fafc;
+  opacity: 0.6;
+}
+
+.preview-btn {
+  white-space: nowrap;
+  min-width: 100px;
+}
+
+.url-examples {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+}
+
+.url-examples p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.url-examples ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.url-examples li {
+  margin: 0.25rem 0;
+  font-family: monospace;
+}
+
+.video-info {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid #e9ecef;
+}
+
+.video-info.valid {
+  border-color: #28a745;
+  background-color: #d4edda;
+}
+
+.video-info.invalid {
+  border-color: #ffc107;
+  background-color: #fff3cd;
+}
+
+.video-details {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.video-thumbnail {
+  font-size: 2.5rem;
+  min-width: 50px;
+}
+
+.video-metadata {
+  flex: 1;
+}
+
+.video-metadata h4 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.video-metadata p {
+  margin: 0.25rem 0;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+.warning {
+  color: #d69e2e !important;
+  font-weight: 600;
+}
+
+.process-actions {
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1rem;
+}
+
+.error-message {
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: #fed7d7;
+  border: 1px solid #feb2b2;
+  border-radius: 8px;
+  color: #c53030;
+  text-align: center;
+}
+
+.error-message span {
+  font-weight: 500;
+}
+
+.youtube-tips {
+  background: #e6fffa;
+  border: 1px solid #81e6d9;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.youtube-tips h4 {
+  margin: 0 0 1rem 0;
+  color: #234e52;
+  font-size: 1rem;
+}
+
+.youtube-tips ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #2d5a62;
+}
+
+.youtube-tips li {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Loading animation */
+.preview-btn:disabled {
+  opacity: 0.7;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .input-group {
+    flex-direction: column;
+  }
+  
+  .preview-btn {
+    align-self: stretch;
+  }
+  
+  .video-details {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .video-thumbnail {
+    font-size: 3rem;
+  }
+  
+  .url-examples ul {
+    font-size: 0.8rem;
+  }
+}
