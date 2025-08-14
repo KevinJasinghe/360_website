@@ -26,12 +26,17 @@ class AIProcessor:
             device: torch device ('cpu' or 'cuda', None for auto-detect)
         """
         try:
-            # Auto-detect device if not specified
+            # Auto-detect device if not specified - prefer CPU for Railway
             if device is None:
-                cls._device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+                # Force CPU for Railway deployment to save memory
+                cls._device = torch.device('cpu')
             else:
                 cls._device = torch.device(device)
             
+            # Memory optimization for Railway
+            if hasattr(torch, 'set_num_threads'):
+                torch.set_num_threads(2)  # Limit thread usage
+                
             print(f"🔧 Initializing AI model on {cls._device}")
             
             # Load or create model
@@ -101,8 +106,8 @@ class AIProcessor:
             with torch.no_grad():
                 cls._model.eval()
                 
-                # Handle long audio by chunking
-                if features.shape[2] > 1000:  # More than ~20 seconds
+                # Handle long audio by chunking - more aggressive for Railway
+                if features.shape[2] > 500:  # More than ~10 seconds for Railway memory limits
                     predictions = cls._process_long_audio(features)
                 else:
                     predictions = cls._model(features)  # [1, 88, T]

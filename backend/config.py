@@ -9,12 +9,12 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     
     # File upload settings
-    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 100 * 1024 * 1024))  # 100MB default
+    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 1024 * 1024 * 1024))  # 1GB default
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', '/tmp/uploads')
     
     # AI Model settings
     WEIGHTS_FOLDER = os.environ.get('WEIGHTS_FOLDER', 'weights')
-    MODEL_PATH = os.environ.get('MODEL_PATH', 'weights/piano_transcription_weights.pth')
+    MODEL_PATH = os.environ.get('MODEL_PATH', '../model_training_model_epochs21_lr0.001_weight_decay0.0001_start20250814_165547_endongoing_epoch021.pth')
     
     # Processing limits
     MAX_AUDIO_DURATION = int(os.environ.get('MAX_AUDIO_DURATION', 600))  # 10 minutes
@@ -43,16 +43,22 @@ class DevelopmentConfig(Config):
     UPLOAD_FOLDER = '../uploads'
 
 class ProductionConfig(Config):
-    """Production configuration"""
+    """Production configuration for Railway"""
     DEBUG = False
     
-    # Use /tmp for uploads in production (ephemeral storage)
-    UPLOAD_FOLDER = '/tmp/uploads'
+    # Railway specific settings
+    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', '/tmp/uploads')
     
-    # Stricter limits for production
-    MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB
-    MAX_AUDIO_DURATION = 300  # 5 minutes
-    MAX_YOUTUBE_DURATION = 300  # 5 minutes
+    # Optimized for Railway's memory limits
+    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 200 * 1024 * 1024))  # 200MB for Railway
+    MAX_AUDIO_DURATION = int(os.environ.get('MAX_AUDIO_DURATION', 300))  # 5 minutes for Railway
+    MAX_YOUTUBE_DURATION = int(os.environ.get('MAX_YOUTUBE_DURATION', 300))  # 5 minutes
+    
+    # Railway uses ephemeral storage - more frequent cleanup
+    CLEANUP_INTERVAL = int(os.environ.get('CLEANUP_INTERVAL', 1800))  # 30 minutes
+    
+    # Railway specific model path
+    MODEL_PATH = os.environ.get('MODEL_PATH', './model_training_model_epochs21_lr0.001_weight_decay0.0001_start20250814_165547_endongoing_epoch021.pth')
     
     @staticmethod
     def init_app(app):

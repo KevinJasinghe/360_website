@@ -182,8 +182,10 @@ processing_status = {}
 app = create_app()
 
 if __name__ == '__main__':
-    port = app.config['PORT']
-    host = app.config['HOST']
-    debug = app.config['DEBUG']
+    # Railway provides PORT environment variable
+    port = int(os.environ.get('PORT', app.config.get('PORT', 3001)))
+    host = os.environ.get('HOST', app.config.get('HOST', '0.0.0.0'))
+    debug = app.config.get('DEBUG', False)
     
-    app.run(debug=debug, host=host, port=port)
+    app.logger.info(f"Starting Piano Transcription API on {host}:{port}")
+    app.run(debug=debug, host=host, port=port, threaded=True)

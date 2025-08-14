@@ -33,7 +33,7 @@ os.makedirs(WEIGHTS_FOLDER, exist_ok=True)
 
 # Initialize AI model
 print("🔧 Initializing AI model...")
-model_path = os.path.join(WEIGHTS_FOLDER, 'piano_transcription_weights.pth')
+model_path = '../model_training_model_epochs21_lr0.001_weight_decay0.0001_start20250814_165547_endongoing_epoch021.pth'
 if AIProcessor.initialize(model_path if os.path.exists(model_path) else None):
     model_info = AIProcessor.get_model_info()
     print(f"✅ AI model ready: {model_info['model_name']} on {model_info['device']}")

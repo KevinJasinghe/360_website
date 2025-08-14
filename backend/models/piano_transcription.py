@@ -3,6 +3,7 @@ Piano Transcription Model - Extracted from training.ipynb
 CRNN-based model for piano note transcription
 """
 
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -109,7 +110,7 @@ def load_model(model_path, device='cpu', num_pitches=88):
     Load a trained model from file
     
     Args:
-        model_path: path to saved model weights (.pth file)
+        model_path: path to saved model weights (.pth file or zip archive)
         device: torch device
         num_pitches: number of piano keys
     
@@ -119,8 +120,19 @@ def load_model(model_path, device='cpu', num_pitches=88):
     model = create_model(device=device, num_pitches=num_pitches)
     
     try:
-        # Load state dict
-        state_dict = torch.load(model_path, map_location=device)
+        # Load checkpoint (works for both .pth and zip archives)
+        checkpoint = torch.load(model_path, map_location=device, weights_only=False)
+        
+        # Handle different checkpoint formats
+        if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+            # Full training checkpoint format
+            state_dict = checkpoint['model_state_dict']
+        elif isinstance(checkpoint, dict):
+            # Assume direct state dict
+            state_dict = checkpoint
+        else:
+            raise ValueError("Unknown checkpoint format")
+            
         model.load_state_dict(state_dict)
         print(f"✅ Model loaded from {model_path}")
     except Exception as e:

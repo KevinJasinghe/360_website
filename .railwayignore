@@ -1,0 +1,43 @@
+# Exclude development and test files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.coverage
+
+# Exclude local development files
+uploads/
+logs/
+.env.local
+.DS_Store
+
+# Exclude Node.js frontend (if deploying backend only)
+frontend/node_modules/
+frontend/build/
+frontend/.next/
+
+# Exclude large files that aren't needed
+*.wav
+*.mp3
+*.mid
+test_output*
+*.log
+
+# Exclude old models (keep only the one we need)
+model_training_model_epochs74*
+
+# Exclude development scripts
+test_integration.py
+maestro_analysis/
+notebook.ipynb
+*.ipynb
+download_original_audio_colab.py
+convert_trained_model_midi.py
+save_trained_model.py
+save_model_code.py
+
+# Exclude docs and plans
+*.md
+plan*.md
+DEPLOYMENT_GUIDE.md
