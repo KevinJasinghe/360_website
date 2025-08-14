@@ -5,6 +5,7 @@ __pycache__
 *.pyd
 .pytest_cache
 .coverage
+.git/
 
 # Exclude local development files
 uploads/
@@ -12,19 +13,24 @@ logs/
 .env.local
 .DS_Store
 
-# Exclude Node.js frontend (if deploying backend only)
+# Exclude Node.js frontend build artifacts
 frontend/node_modules/
-frontend/build/
 frontend/.next/
+frontend/build/
+frontend/.cache/
 
-# Exclude large files that aren't needed
+# Exclude ALL large media files
 *.wav
 *.mp3
 *.mid
+*.mp4
+*.webm
+*.m4a
 test_output*
 *.log
 
-# Exclude old models (keep only the one we need)
+# Exclude the large model file - we'll download it differently
+model_training_model_epochs21_lr0.001_weight_decay0.0001_start20250814_165547_endongoing_epoch021.pth
 model_training_model_epochs74*
 
 # Exclude development scripts
@@ -36,8 +42,14 @@ download_original_audio_colab.py
 convert_trained_model_midi.py
 save_trained_model.py
 save_model_code.py
+check_setup.py
 
 # Exclude docs and plans
 *.md
 plan*.md
 DEPLOYMENT_GUIDE.md
+RAILWAY_DEPLOYMENT.md
+
+# Exclude test files
+test.wav
+test_output*

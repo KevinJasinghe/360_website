@@ -7,5 +7,16 @@
     "startCommand": "cd backend && python app_production.py",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 300
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "FLASK_ENV": "production",
+        "MAX_CONTENT_LENGTH": "200000000",
+        "MAX_AUDIO_DURATION": "300",
+        "CLEANUP_INTERVAL": "1800",
+        "MODEL_DOWNLOAD_URL": "YOUR_MODEL_URL_HERE"
+      }
+    }
   }
 }

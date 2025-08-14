@@ -78,7 +78,13 @@ class YouTubeDownloader:
             # Security: Validate output path to prevent directory traversal
             import os
             output_path = os.path.abspath(output_path)
-            if not output_path.startswith('/tmp/') and not output_path.startswith(os.getcwd()):
+            # Allow uploads directory and /tmp directory
+            allowed_paths = ['/tmp/', os.getcwd(), os.path.abspath('../uploads'), os.path.abspath('./uploads')]
+            path_allowed = any(output_path.startswith(allowed_path) for allowed_path in allowed_paths)
+            
+            if not path_allowed:
+                print(f"❌ Path validation failed: {output_path}")
+                print(f"   Allowed paths: {allowed_paths}")
                 return False, "Invalid output path"
             
             # Download options - use webm/opus format that librosa can handle
@@ -86,10 +92,9 @@ class YouTubeDownloader:
                 'format': 'bestaudio[ext=webm]/bestaudio/best[filesize<100M]',  # Max 100MB
                 'outtmpl': output_path.replace('.wav', '.%(ext)s'),
                 'noplaylist': True,
-                'quiet': True,
-                'no_warnings': True,
+                'quiet': False,  # Enable logging for debugging
+                'no_warnings': False,
                 'extract_flat': False,
-                'max_downloads': 1,
                 'socket_timeout': 30,
                 'retries': 3,
             }
@@ -97,9 +102,36 @@ class YouTubeDownloader:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
             
-            return True, "Download successful"
+            # Check if file was actually downloaded
+            base_path = output_path.replace('.wav', '')
+            possible_files = [
+                f"{base_path}.webm",
+                f"{base_path}.m4a", 
+                f"{base_path}.mp4",
+                f"{base_path}.opus",
+                output_path
+            ]
+            
+            downloaded_file = None
+            for possible_file in possible_files:
+                if os.path.exists(possible_file):
+                    downloaded_file = possible_file
+                    break
+            
+            if downloaded_file:
+                return True, f"Download successful: {downloaded_file}"
+            else:
+                return False, "Download completed but file not found"
             
         except yt_dlp.DownloadError as e:
+            # Check if download actually succeeded despite the error
+            base_path = output_path.replace('.wav', '')
+            possible_files = [f"{base_path}.webm", f"{base_path}.m4a", f"{base_path}.mp4", f"{base_path}.opus", output_path]
+            
+            for possible_file in possible_files:
+                if os.path.exists(possible_file):
+                    return True, f"Download successful despite error: {possible_file}"
+            
             return False, f"Download failed: {str(e)}"
         except Exception as e:
             return False, f"Unexpected error: {str(e)}"

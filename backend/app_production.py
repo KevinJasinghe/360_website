@@ -52,11 +52,23 @@ def create_app(config_name=None):
     return app
 
 def init_ai_model(app):
-    """Initialize AI model safely"""
+    """Initialize AI model safely with download support for Railway"""
     with app.app_context():
         try:
             app.logger.info("Initializing AI model...")
-            model_path = app.config['MODEL_PATH']
+            
+            # Try to download model if not available (for Railway deployment)
+            from services.model_downloader import EnvironmentModelDownloader
+            
+            model_available = EnvironmentModelDownloader.ensure_model_available()
+            
+            if model_available:
+                model_path = EnvironmentModelDownloader.get_model_path()
+                app.logger.info(f"Using model: {model_path}")
+            else:
+                # Fallback to configured path
+                model_path = app.config['MODEL_PATH']
+                app.logger.warning("Model download failed, trying configured path")
             
             if os.path.exists(model_path):
                 success = AIProcessor.initialize(model_path)
