@@ -9,8 +9,11 @@ pretty_midi>=0.2.9
 
 # Web Framework
 Flask>=2.3.0
+Werkzeug>=2.3.0
 Flask-CORS>=4.0.0
 Flask-RESTful>=0.3.10
+Jinja2>=3.1.0
+MarkupSafe>=2.1.0
 
 # Data Processing
 pandas==2.3.1
