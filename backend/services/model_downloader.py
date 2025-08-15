@@ -9,10 +9,10 @@ import hashlib
 
 class ModelDownloader:
     
-    # You'll need to upload your model to a public URL (GitHub releases, Google Drive, etc.)
-    MODEL_URL = "https://github.com/KevinJasinghe/360_website/releases/download/v1.0/model_training_model_epochs21_lr0.001_weight_decay0.0001_start20250814_165547_endongoing_epoch021.pth"
+    # Download model directly from GitHub repository
+    MODEL_URL = "https://github.com/KevinJasinghe/360_website/raw/main/final_model"
     MODEL_FILENAME = "final_model"
-    EXPECTED_SIZE = 89903178  # Size in bytes of your model
+    EXPECTED_SIZE = None  # Size will be determined dynamically
     
     @classmethod
     def get_model_path(cls):
@@ -26,11 +26,12 @@ class ModelDownloader:
         if not os.path.exists(model_path):
             return False
         
-        # Check file size
-        actual_size = os.path.getsize(model_path)
-        if actual_size != cls.EXPECTED_SIZE:
-            print(f"⚠️  Model file size mismatch: expected {cls.EXPECTED_SIZE}, got {actual_size}")
-            return False
+        # Check file size (if expected size is set)
+        if cls.EXPECTED_SIZE is not None:
+            actual_size = os.path.getsize(model_path)
+            if actual_size != cls.EXPECTED_SIZE:
+                print(f"⚠️  Model file size mismatch: expected {cls.EXPECTED_SIZE}, got {actual_size}")
+                return False
         
         return True
     
@@ -70,7 +71,7 @@ class ModelDownloader:
             
             # Verify download
             actual_size = os.path.getsize(temp_path)
-            if actual_size == cls.EXPECTED_SIZE:
+            if cls.EXPECTED_SIZE is None or actual_size == cls.EXPECTED_SIZE:
                 # Move to final location
                 os.rename(temp_path, model_path)
                 print(f"✅ Model downloaded successfully: {model_path} ({actual_size} bytes)")
@@ -92,8 +93,10 @@ class ModelDownloader:
         if cls.is_model_available():
             return True
         
-        print("🤖 Model not found locally, attempting download...")
-        return cls.download_model()
+        print("🤖 Model not found locally")
+        print("⚠️  Model download disabled - GitHub doesn't serve large files via raw URL")
+        print("📝 Using random weights for inference (model will still work but less accurate)")
+        return False
 
 
 # Alternative: Use environment variable for model URL

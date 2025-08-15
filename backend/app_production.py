@@ -59,23 +59,30 @@ def init_ai_model(app):
             app.logger.info("Initializing AI model...")
             
             # Try to download model if not available (for Railway deployment)
-            from services.model_downloader import EnvironmentModelDownloader
+            from services.model_downloader import ModelDownloader
             
-            model_available = EnvironmentModelDownloader.ensure_model_available()
+            model_available = False
+            try:
+                model_available = ModelDownloader.ensure_model_available()
+                if model_available:
+                    model_path = ModelDownloader.get_model_path()
+                    app.logger.info(f"Using downloaded model: {model_path}")
+                else:
+                    app.logger.warning("Model download failed, trying configured path")
+            except Exception as e:
+                app.logger.warning(f"Model download error: {e}, trying configured path")
             
-            if model_available:
-                model_path = EnvironmentModelDownloader.get_model_path()
-                app.logger.info(f"Using model: {model_path}")
-            else:
+            if not model_available:
                 # Fallback to configured path
                 model_path = app.config['MODEL_PATH']
-                app.logger.warning("Model download failed, trying configured path")
-            
-            if os.path.exists(model_path):
-                success = AIProcessor.initialize(model_path)
+                if os.path.exists(model_path):
+                    app.logger.info(f"Using configured model: {model_path}")
+                    success = AIProcessor.initialize(model_path)
+                else:
+                    app.logger.warning(f"Model file not found: {model_path}, using random weights")
+                    success = AIProcessor.initialize(None)
             else:
-                app.logger.warning(f"Model file not found: {model_path}")
-                success = AIProcessor.initialize(None)
+                success = AIProcessor.initialize(model_path)
             
             if success:
                 model_info = AIProcessor.get_model_info()

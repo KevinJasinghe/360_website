@@ -1,0 +1,4 @@
+This is a placeholder model file.
+The actual model file (final_model) is too large for GitHub raw downloads.
+Railway deployment will use random weights for now.
+For production, upload the model to a CDN or use GitHub LFS.
