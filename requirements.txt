@@ -10,7 +10,7 @@ yt-dlp==2023.12.30
 ffmpeg-python==0.2.0
 uuid==1.30
 
-# AI/ML dependencies (from training.ipynb)
+# AI/ML dependencies (from training.ipynb) - CPU-only PyTorch for smaller size
 torch>=1.9.0
 librosa>=0.8.0
 soundfile>=0.10.0
@@ -20,6 +20,6 @@ pretty_midi>=0.2.9
 # Optional: for better performance
 numba>=0.56.0  # Used by librosa for speed
 
-# Development/testing (optional)
-matplotlib>=3.5.0  # For visualization 
+# Development/testing (optional) - Remove heavy packages for production
+# matplotlib>=3.5.0  # For visualization 
 tqdm>=4.60.0      # Progress bars
