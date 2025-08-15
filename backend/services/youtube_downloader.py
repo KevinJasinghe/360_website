@@ -36,8 +36,32 @@ class YouTubeDownloader:
     @staticmethod
     def get_video_info(url):
         """Get video information without downloading"""
-        # Try multiple strategies for getting video info
+        # Try multiple strategies for getting video info - Updated for 2025
         strategies = [
+            {
+                'name': 'ios_music',
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['ios_music'],
+                        'player_skip': ['webpage'],
+                    }
+                },
+                'http_headers': {
+                    'User-Agent': 'com.google.ios.youtubemusic/6.42.52 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)'
+                }
+            },
+            {
+                'name': 'android_creator',
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['android_creator'],
+                        'player_skip': ['webpage'],
+                    }
+                },
+                'http_headers': {
+                    'User-Agent': 'com.google.android.apps.youtube.creator/22.30.100 (Linux; U; Android 11) gzip'
+                }
+            },
             {
                 'name': 'tv_embedded',
                 'extractor_args': {
@@ -59,19 +83,7 @@ class YouTubeDownloader:
                     }
                 },
                 'http_headers': {
-                    'User-Agent': 'com.google.android.youtube/17.36.4 (Linux; U; Android 12; GB) gzip'
-                }
-            },
-            {
-                'name': 'web_music',
-                'extractor_args': {
-                    'youtube': {
-                        'player_client': ['web_music'],
-                        'player_skip': ['webpage'],
-                    }
-                },
-                'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip'
                 }
             }
         ]
@@ -142,8 +154,34 @@ class YouTubeDownloader:
                 print(f"   Allowed paths: {allowed_paths}")
                 return False, "Invalid output path"
             
-            # Try multiple download strategies to avoid bot detection
+            # Try multiple download strategies to avoid bot detection - Updated for 2025
             strategies = [
+                {
+                    'name': 'ios_music',
+                    'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['ios_music'],
+                            'player_skip': ['webpage'],
+                        }
+                    },
+                    'http_headers': {
+                        'User-Agent': 'com.google.ios.youtubemusic/6.42.52 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)'
+                    }
+                },
+                {
+                    'name': 'android_creator',
+                    'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['android_creator'],
+                            'player_skip': ['webpage'],
+                        }
+                    },
+                    'http_headers': {
+                        'User-Agent': 'com.google.android.apps.youtube.creator/22.30.100 (Linux; U; Android 11) gzip'
+                    }
+                },
                 {
                     'name': 'tv_embedded',
                     'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
@@ -167,33 +205,23 @@ class YouTubeDownloader:
                         }
                     },
                     'http_headers': {
-                        'User-Agent': 'com.google.android.youtube/17.36.4 (Linux; U; Android 12; GB) gzip'
+                        'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip'
                     }
                 },
                 {
-                    'name': 'web_music',
+                    'name': 'web_safari',
                     'format': 'bestaudio[ext=m4a]/bestaudio/best[filesize<100M]',
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['web_music'],
-                            'player_skip': ['webpage'],
+                            'player_client': ['web'],
+                            'player_skip': ['configs'],
                         }
                     },
                     'http_headers': {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                    }
-                },
-                {
-                    'name': 'android_embedded_fallback',
-                    'format': 'bestaudio/best[filesize<100M]',
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['android_embedded'],
-                            'player_skip': ['webpage', 'configs'],
-                        }
-                    },
-                    'http_headers': {
-                        'User-Agent': 'com.google.android.youtube/17.31.35 (Linux; U; Android 11) gzip'
+                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language': 'en-us,en;q=0.5',
+                        'Sec-Fetch-Mode': 'navigate'
                     }
                 }
             ]
