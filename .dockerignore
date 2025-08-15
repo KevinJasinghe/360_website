@@ -1,15 +1,57 @@
-node_modules
-npm-debug.log
+# Git and version control
 .git
 .gitignore
-.env
-.DS_Store
-*.pyc
+README.md
+CLAUDE.md
+
+# Python cache and virtual environments
 __pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+venv
+.venv
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.env
+
+# Logs and temporary files
+*.log
+logs/
+tmp/
+temp/
+
+# Frontend build artifacts and dependencies
+frontend/
+node_modules/
+npm-debug.log
+
+# Development and test files
+tests/
+test/
 .pytest_cache
 .coverage
+
+# Large model files that should be downloaded at runtime
+*.pth
+*.pt
+*.pkl
+
+# Jupyter notebooks
+*.ipynb
+training.ipynb
+
+# Upload directories (keep structure but not files)
 uploads/*
 !uploads/.gitkeep
-frontend/build
 backend/uploads/*
 !backend/uploads/.gitkeep

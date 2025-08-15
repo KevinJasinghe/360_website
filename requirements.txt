@@ -1,4 +1,4 @@
-# Existing Flask dependencies
+# Core Flask dependencies - use specific versions for reproducibility
 Flask==2.3.3
 Flask-CORS==4.0.0
 Flask-RESTful==0.3.10
@@ -8,18 +8,15 @@ requests==2.31.0
 # File processing
 yt-dlp==2023.12.30
 ffmpeg-python==0.2.0
-uuid==1.30
 
-# AI/ML dependencies (from training.ipynb) - CPU-only PyTorch for smaller size
-torch>=1.9.0
-librosa>=0.8.0
-soundfile>=0.10.0
-numpy>=1.20.0
-pretty_midi>=0.2.9
+# AI/ML dependencies - CPU-only versions for minimal size
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==2.0.0+cpu
+torchaudio==2.0.0+cpu
+librosa==0.10.0
+soundfile==0.12.1
+numpy==1.24.3
+pretty_midi==0.2.9
 
-# Optional: for better performance
-numba>=0.56.0  # Used by librosa for speed
-
-# Development/testing (optional) - Remove heavy packages for production
-# matplotlib>=3.5.0  # For visualization 
-tqdm>=4.60.0      # Progress bars
+# Progress bars only (remove all optional heavy dependencies)
+tqdm==4.65.0
