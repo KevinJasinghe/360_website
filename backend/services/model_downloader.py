@@ -9,7 +9,7 @@ import hashlib
 
 class ModelDownloader:
     
-    # Download model directly from GitHub repository
+    # Download model from GitHub LFS
     MODEL_URL = "https://github.com/KevinJasinghe/360_website/raw/main/final_model"
     MODEL_FILENAME = "final_model"
     EXPECTED_SIZE = None  # Size will be determined dynamically
@@ -93,10 +93,13 @@ class ModelDownloader:
         if cls.is_model_available():
             return True
         
-        print("🤖 Model not found locally")
-        print("⚠️  Model download disabled - GitHub doesn't serve large files via raw URL")
-        print("📝 Using random weights for inference (model will still work but less accurate)")
-        return False
+        print("🤖 Model not found locally, attempting download from Hugging Face...")
+        try:
+            return cls.download_model()
+        except Exception as e:
+            print(f"⚠️  Model download failed: {e}")
+            print("📝 Using random weights for inference (model will still work but less accurate)")
+            return False
 
 
 # Alternative: Use environment variable for model URL
