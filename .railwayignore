@@ -17,7 +17,6 @@ logs/
 frontend/
 
 # Exclude Docker files (using Nixpacks instead)
-Dockerfile
 docker-compose.yml
 
 # Exclude ALL large media files
