@@ -4,7 +4,8 @@
 FROM node:18-alpine as frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci --only=production
+# Use npm install instead of npm ci to handle lock file mismatches
+RUN npm install --omit=dev
 COPY frontend/ ./
 RUN npm run build
 
