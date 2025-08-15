@@ -6,6 +6,16 @@ import subprocess
 import json
 import tempfile
 
+# Import pytubefix as primary alternative
+try:
+    from pytubefix import YouTube as PytubeFixYouTube
+    from pytubefix.exceptions import VideoUnavailable, PytubeFixError
+    PYTUBEFIX_AVAILABLE = True
+    print("✅ PytubeFixed loaded successfully")
+except ImportError:
+    PYTUBEFIX_AVAILABLE = False
+    print("⚠️ PytubeFixed not available - will use yt-dlp only")
+
 class YouTubeDownloader:
     
     @staticmethod
@@ -36,6 +46,74 @@ class YouTubeDownloader:
                 return match.group(1)
         return None
     
+    @staticmethod
+    def get_video_info_pytubefix(url):
+        """Get video info using pytubefix - more reliable than yt-dlp for 2025"""
+        if not PYTUBEFIX_AVAILABLE:
+            return None, "PytubeFixed not available"
+        
+        try:
+            print("🔄 Trying pytubefix info extraction")
+            yt = PytubeFixYouTube(url, use_oauth=False, allow_oauth_cache=False)
+            
+            # Get basic info
+            info = {
+                'title': yt.title or 'Unknown',
+                'duration': yt.length or 0,
+                'video_id': yt.video_id or '',
+                'uploader': yt.author or 'Unknown'
+            }
+            
+            print("✅ PytubeFixed info extraction succeeded")
+            return info, None
+            
+        except VideoUnavailable as e:
+            return None, f"Video unavailable: {str(e)}"
+        except PytubeFixError as e:
+            return None, f"PytubeFixed error: {str(e)}"
+        except Exception as e:
+            return None, f"PytubeFixed unexpected error: {str(e)}"
+
+    @staticmethod
+    def download_audio_pytubefix(url, output_path, max_duration=600):
+        """Download audio using pytubefix - more reliable than yt-dlp for 2025"""
+        if not PYTUBEFIX_AVAILABLE:
+            return False, "PytubeFixed not available"
+        
+        try:
+            print("🔄 Trying pytubefix audio download")
+            yt = PytubeFixYouTube(url, use_oauth=False, allow_oauth_cache=False)
+            
+            # Get the best audio stream
+            audio_stream = yt.streams.filter(only_audio=True, file_extension='mp4').first()
+            if not audio_stream:
+                # Fallback to any audio stream
+                audio_stream = yt.streams.filter(only_audio=True).first()
+            
+            if not audio_stream:
+                return False, "No audio streams available"
+            
+            # Download to the specified path
+            base_path = output_path.replace('.wav', '')
+            output_file = f"{base_path}.m4a"
+            
+            # Download the file
+            audio_stream.download(output_path=os.path.dirname(output_path), 
+                                filename=os.path.basename(output_file))
+            
+            if os.path.exists(output_file):
+                print("✅ PytubeFixed audio download succeeded")
+                return True, f"PytubeFixed download successful: {output_file}"
+            else:
+                return False, "PytubeFixed download completed but file not found"
+                
+        except VideoUnavailable as e:
+            return False, f"Video unavailable: {str(e)}"
+        except PytubeFixError as e:
+            return False, f"PytubeFixed download error: {str(e)}"
+        except Exception as e:
+            return False, f"PytubeFixed unexpected error: {str(e)}"
+
     @staticmethod
     def get_video_info_cli(url):
         """Get video info using yt-dlp command line - sometimes more reliable"""
@@ -165,42 +243,52 @@ class YouTubeDownloader:
             }
         ]
         
-        last_error = None
-        for strategy in strategies:
-            try:
-                print(f"🔄 Trying info strategy: {strategy['name']}")
-                ydl_opts = {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': strategy['extractor_args'],
-                    'http_headers': strategy['http_headers'],
-                    'socket_timeout': 10,
-                    'retries': 0,  # No retries per strategy to fail fast
-                    'fragment_retries': 0,
-                    'skip_unavailable_fragments': True,
-                    'geo_bypass': True,
-                    'no_check_certificate': True
-                }
-                
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(url, download=False)
-                    print(f"✅ Info strategy {strategy['name']} succeeded")
-                    break  # Success, exit loop
+        # Try pytubefix first (primary method for 2025)
+        if PYTUBEFIX_AVAILABLE:
+            pytubefix_info, pytubefix_error = YouTubeDownloader.get_video_info_pytubefix(url)
+            if pytubefix_info:
+                info = pytubefix_info
+            else:
+                print(f"❌ PytubeFixed failed: {pytubefix_error}")
+        
+        # If pytubefix failed, try yt-dlp strategies
+        if 'info' not in locals():
+            last_error = None
+            for strategy in strategies:
+                try:
+                    print(f"🔄 Trying yt-dlp strategy: {strategy['name']}")
+                    ydl_opts = {
+                        'quiet': True,
+                        'no_warnings': True,
+                        'extractor_args': strategy['extractor_args'],
+                        'http_headers': strategy['http_headers'],
+                        'socket_timeout': 10,
+                        'retries': 0,  # No retries per strategy to fail fast
+                        'fragment_retries': 0,
+                        'skip_unavailable_fragments': True,
+                        'geo_bypass': True,
+                        'no_check_certificate': True
+                    }
                     
-            except Exception as e:
-                print(f"❌ Info strategy {strategy['name']} failed: {str(e)[:100]}")
-                last_error = e
-                if strategy == strategies[-1]:  # Last strategy failed, try CLI fallback
-                    print("🔄 All Python API strategies failed, trying CLI fallback")
-                    cli_info, cli_error = YouTubeDownloader.get_video_info_cli(url)
-                    if cli_info:
-                        info = cli_info
-                        print("✅ CLI fallback succeeded")
-                        break
-                    else:
-                        print(f"❌ CLI fallback failed: {cli_error}")
-                        raise last_error  # Re-raise the last error
-                continue
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        info = ydl.extract_info(url, download=False)
+                        print(f"✅ yt-dlp strategy {strategy['name']} succeeded")
+                        break  # Success, exit loop
+                        
+                except Exception as e:
+                    print(f"❌ yt-dlp strategy {strategy['name']} failed: {str(e)[:100]}")
+                    last_error = e
+                    if strategy == strategies[-1]:  # Last strategy failed, try CLI fallback
+                        print("🔄 All yt-dlp strategies failed, trying CLI fallback")
+                        cli_info, cli_error = YouTubeDownloader.get_video_info_cli(url)
+                        if cli_info:
+                            info = cli_info
+                            print("✅ CLI fallback succeeded")
+                            break
+                        else:
+                            print(f"❌ CLI fallback failed: {cli_error}")
+                            raise last_error  # Re-raise the last error
+                    continue
         
         try:
             duration = info.get('duration', 0)
@@ -390,48 +478,67 @@ class YouTubeDownloader:
                 }
             ]
             
-            for strategy in strategies:
-                try:
-                    print(f"🔄 Trying download strategy: {strategy['name']}")
-                    
-                    ydl_opts = {
-                        'format': strategy['format'],
-                        'outtmpl': output_path.replace('.wav', '.%(ext)s'),
-                        'noplaylist': True,
-                        'quiet': True,  # Reduce noise for multiple attempts
-                        'no_warnings': True,
-                        'extract_flat': False,
-                        'socket_timeout': 15,
-                        'retries': 0,  # No retries per strategy to fail fast
-                        'fragment_retries': 0,
-                        'skip_unavailable_fragments': True,
-                        'geo_bypass': True,
-                        'no_check_certificate': True,
-                        'extractor_args': strategy['extractor_args'],
-                        'http_headers': strategy['http_headers']
-                    }
-                    
-                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                        ydl.download([url])
-                    
-                    # If we get here, download was successful
-                    print(f"✅ Download successful with strategy: {strategy['name']}")
-                    break
-                    
-                except Exception as e:
-                    print(f"❌ Strategy {strategy['name']} failed: {str(e)}")
-                    if strategy == strategies[-1]:  # Last strategy failed, try CLI fallback
-                        print("🔄 All Python API strategies failed, trying CLI fallback")
-                        cli_success, cli_message = YouTubeDownloader.download_audio_cli(url, output_path, max_duration)
-                        if cli_success:
-                            print("✅ CLI fallback download succeeded")
-                            return cli_success, cli_message
-                        else:
-                            print(f"❌ CLI fallback failed: {cli_message}")
-                            raise e  # Re-raise the last error
-                    continue
+            # Try pytubefix first (primary method for 2025)
+            download_success = False
+            success_message = ""
+            if PYTUBEFIX_AVAILABLE:
+                pytubefix_success, pytubefix_message = YouTubeDownloader.download_audio_pytubefix(url, output_path, max_duration)
+                if pytubefix_success:
+                    download_success = True
+                    success_message = pytubefix_message
+                    print("✅ PytubeFixed download completed, skipping yt-dlp strategies")
+                else:
+                    print(f"❌ PytubeFixed download failed: {pytubefix_message}")
             
-            # Check if file was actually downloaded
+            # If pytubefix failed, try yt-dlp strategies
+            if not download_success:
+                for strategy in strategies:
+                    try:
+                        print(f"🔄 Trying yt-dlp strategy: {strategy['name']}")
+                        
+                        ydl_opts = {
+                            'format': strategy['format'],
+                            'outtmpl': output_path.replace('.wav', '.%(ext)s'),
+                            'noplaylist': True,
+                            'quiet': True,  # Reduce noise for multiple attempts
+                            'no_warnings': True,
+                            'extract_flat': False,
+                            'socket_timeout': 15,
+                            'retries': 0,  # No retries per strategy to fail fast
+                            'fragment_retries': 0,
+                            'skip_unavailable_fragments': True,
+                            'geo_bypass': True,
+                            'no_check_certificate': True,
+                            'extractor_args': strategy['extractor_args'],
+                            'http_headers': strategy['http_headers']
+                        }
+                        
+                        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                            ydl.download([url])
+                        
+                        # If we get here, download was successful
+                        print(f"✅ yt-dlp download successful with strategy: {strategy['name']}")
+                        download_success = True
+                        break
+                        
+                    except Exception as e:
+                        print(f"❌ yt-dlp strategy {strategy['name']} failed: {str(e)}")
+                        if strategy == strategies[-1]:  # Last strategy failed, try CLI fallback
+                            print("🔄 All yt-dlp strategies failed, trying CLI fallback")
+                            cli_success, cli_message = YouTubeDownloader.download_audio_cli(url, output_path, max_duration)
+                            if cli_success:
+                                print("✅ CLI fallback download succeeded")
+                                return cli_success, cli_message
+                            else:
+                                print(f"❌ CLI fallback failed: {cli_message}")
+                                raise e  # Re-raise the last error
+                        continue
+            
+            # If pytubefix succeeded, return its result
+            if download_success and success_message:
+                return True, success_message
+            
+            # Otherwise check if yt-dlp file was actually downloaded
             base_path = output_path.replace('.wav', '')
             possible_files = [
                 f"{base_path}.webm",
