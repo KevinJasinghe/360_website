@@ -41,10 +41,10 @@ test/
 .pytest_cache
 .coverage
 
-# Large model files that should be downloaded at runtime
-*.pth
-*.pt
-*.pkl
+# Large model files that should be downloaded at runtime (commented out to include model in image)
+# *.pth
+# *.pt
+# *.pkl
 
 # Jupyter notebooks
 *.ipynb

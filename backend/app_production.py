@@ -172,10 +172,14 @@ def register_general_routes(app):
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
     def serve(path):
-        if path != "" and os.path.exists(os.path.join('static', path)):
-            return send_from_directory('static', path)
-        else:
-            return send_from_directory('static', 'index.html')
+        # First try to serve the requested file from static directory
+        if path != "":
+            static_file_path = os.path.join(os.path.dirname(__file__), 'static', path)
+            if os.path.exists(static_file_path):
+                return send_from_directory(os.path.join(os.path.dirname(__file__), 'static'), path)
+        
+        # Default to serving index.html for SPA routing
+        return send_from_directory(os.path.join(os.path.dirname(__file__), 'static'), 'index.html')
 
 # Global processing status storage
 # In production, this should be replaced with Redis or a database

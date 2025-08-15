@@ -48,7 +48,10 @@ WORKDIR /app
 # Copy backend application code
 COPY backend/ backend/
 
-# Copy built frontend from frontend-builder stage
+# Copy the trained model file
+COPY *.pth ./
+
+# Copy built frontend from frontend-builder stage, preserving structure
 COPY --from=frontend-builder /app/frontend/build/ backend/static/
 
 # Make sure scripts in .local are usable
