@@ -65,8 +65,8 @@ class ModelDownloader:
                         f.write(chunk)
                         downloaded += len(chunk)
                         
-                        # Show progress
-                        if total_size > 0:
+                        # Show progress (less frequently to avoid log spam)
+                        if total_size > 0 and downloaded % (1024 * 1024) == 0:  # Every 1MB
                             percent = (downloaded / total_size) * 100
                             print(f"   Progress: {percent:.1f}% ({downloaded}/{total_size} bytes)")
             
