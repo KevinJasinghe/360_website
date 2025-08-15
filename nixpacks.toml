@@ -15,7 +15,7 @@ cmds = [
 ]
 
 [start]
-cmd = 'cd backend && python app_production.py'
+cmd = 'python app_production.py'
 
 [variables]
 PYTHONUNBUFFERED = "1"
