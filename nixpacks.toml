@@ -3,7 +3,7 @@ nixPkgs = ['python311', 'gcc', 'ffmpeg', 'libsndfile']
 
 [phases.install]
 cmds = [
-    'pip install --no-cache-dir -r requirements.txt'
+    'python -m pip install --no-cache-dir -r requirements.txt'
 ]
 
 [phases.build]
