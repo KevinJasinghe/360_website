@@ -178,13 +178,144 @@ def register_general_routes(app):
             else:
                 return send_from_directory('static', 'index.html')
     else:
+        # Serve a simple frontend in production
         @app.route('/')
         def index():
-            return jsonify({
-                'message': 'Piano Transcription API',
-                'version': '1.0.0',
-                'status': 'running'
-            })
+            return '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piano Transcription API</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6;
+            background: #f5f5f5;
+        }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c5282; margin-bottom: 30px; }
+        .api-section { margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; }
+        .endpoint { font-family: monospace; background: #e2e8f0; padding: 5px 10px; border-radius: 4px; }
+        .method { font-weight: bold; color: #2d3748; }
+        .upload-form { margin: 20px 0; padding: 20px; background: #ebf8ff; border-radius: 8px; }
+        input[type="file"] { margin: 10px 0; }
+        button { background: #3182ce; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #2c5282; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #c6f6d5; color: #22543d; }
+        .error { background: #fed7d7; color: #742a2a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎹 Piano Transcription API</h1>
+        <p>Convert audio files to MIDI using AI-powered piano transcription.</p>
+        
+        <div class="api-section">
+            <h3>📡 API Endpoints</h3>
+            <p><span class="method">POST</span> <span class="endpoint">/api/upload</span> - Upload audio file</p>
+            <p><span class="method">POST</span> <span class="endpoint">/api/youtube</span> - Process YouTube URL</p>
+            <p><span class="method">POST</span> <span class="endpoint">/api/process/{id}</span> - Start transcription</p>
+            <p><span class="method">GET</span> <span class="endpoint">/api/process/{id}</span> - Check progress</p>
+            <p><span class="method">GET</span> <span class="endpoint">/api/download/{id}</span> - Download MIDI</p>
+            <p><span class="method">GET</span> <span class="endpoint">/health</span> - System status</p>
+        </div>
+        
+        <div class="upload-form">
+            <h3>🎵 Quick Upload Test</h3>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div>
+                    <label for="audioFile">Select audio file (MP3, WAV, etc.):</label><br>
+                    <input type="file" id="audioFile" name="file" accept="audio/*" required>
+                </div>
+                <div>
+                    <button type="submit">Upload & Transcribe</button>
+                </div>
+            </form>
+            <div id="status"></div>
+        </div>
+        
+        <div class="api-section">
+            <h3>ℹ️ System Information</h3>
+            <p><strong>Version:</strong> 1.0.0</p>
+            <p><strong>Max File Size:</strong> 200MB</p>
+            <p><strong>Max Duration:</strong> 5 minutes</p>
+            <p><strong>Supported Formats:</strong> MP3, WAV, MP4, AVI, MOV, WebM</p>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const statusDiv = document.getElementById('status');
+            const fileInput = document.getElementById('audioFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                statusDiv.innerHTML = '<div class="status error">Please select a file</div>';
+                return;
+            }
+            
+            try {
+                statusDiv.innerHTML = '<div class="status">Uploading...</div>';
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const uploadResponse = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!uploadResponse.ok) throw new Error('Upload failed');
+                const uploadData = await uploadResponse.json();
+                
+                statusDiv.innerHTML = '<div class="status success">✅ Upload successful! Starting transcription...</div>';
+                
+                // Start processing
+                const processResponse = await fetch(`/api/process/${uploadData.id}`, {
+                    method: 'POST'
+                });
+                
+                if (!processResponse.ok) throw new Error('Processing failed');
+                const processData = await processResponse.json();
+                
+                statusDiv.innerHTML = `<div class="status success">🎵 Transcription started! Task ID: ${uploadData.id}</div>`;
+                
+                // Poll for completion
+                const pollStatus = async () => {
+                    try {
+                        const statusResponse = await fetch(`/api/process/${uploadData.id}`);
+                        const statusData = await statusResponse.json();
+                        
+                        if (statusData.status === 'completed') {
+                            statusDiv.innerHTML = `
+                                <div class="status success">
+                                    ✅ Transcription complete! 
+                                    <a href="/api/download/${uploadData.id}" download>Download MIDI</a>
+                                </div>
+                            `;
+                        } else if (statusData.status === 'failed') {
+                            statusDiv.innerHTML = `<div class="status error">❌ Transcription failed: ${statusData.error}</div>`;
+                        } else {
+                            statusDiv.innerHTML = `<div class="status">Processing... ${statusData.progress || 0}%</div>`;
+                            setTimeout(pollStatus, 2000);
+                        }
+                    } catch (error) {
+                        statusDiv.innerHTML = `<div class="status error">❌ Error checking status: ${error.message}</div>`;
+                    }
+                };
+                
+                setTimeout(pollStatus, 2000);
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>'''
 
 # Global processing status storage
 # In production, this should be replaced with Redis or a database
