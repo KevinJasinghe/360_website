@@ -87,9 +87,9 @@ class YouTubeDownloader:
                 print(f"   Allowed paths: {allowed_paths}")
                 return False, "Invalid output path"
             
-            # Download options - use webm/opus format that librosa can handle
+            # Download options - use more robust format selection
             ydl_opts = {
-                'format': 'bestaudio[ext=webm]/bestaudio/best[filesize<100M]',  # Max 100MB
+                'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',  # Max 100MB
                 'outtmpl': output_path.replace('.wav', '.%(ext)s'),
                 'noplaylist': True,
                 'quiet': False,  # Enable logging for debugging
@@ -97,6 +97,16 @@ class YouTubeDownloader:
                 'extract_flat': False,
                 'socket_timeout': 30,
                 'retries': 3,
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['android', 'web'],
+                        'player_skip': ['webpage'],
+                        'skip': ['hls', 'dash']
+                    }
+                },
+                'http_headers': {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
             }
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:

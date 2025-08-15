@@ -14,7 +14,7 @@ class Config:
     
     # AI Model settings
     WEIGHTS_FOLDER = os.environ.get('WEIGHTS_FOLDER', 'weights')
-    MODEL_PATH = os.environ.get('MODEL_PATH', '../model_training_model_epochs21_lr0.001_weight_decay0.0001_start20250814_165547_endongoing_epoch021.pth')
+    MODEL_PATH = os.environ.get('MODEL_PATH', '../final_model')
     
     # Processing limits
     MAX_AUDIO_DURATION = int(os.environ.get('MAX_AUDIO_DURATION', 600))  # 10 minutes
@@ -58,7 +58,7 @@ class ProductionConfig(Config):
     CLEANUP_INTERVAL = int(os.environ.get('CLEANUP_INTERVAL', 1800))  # 30 minutes
     
     # Railway specific model path
-    MODEL_PATH = os.environ.get('MODEL_PATH', './model_training_model_epochs21_lr0.001_weight_decay0.0001_start20250814_165547_endongoing_epoch021.pth')
+    MODEL_PATH = os.environ.get('MODEL_PATH', './final_model')
     
     @staticmethod
     def init_app(app):

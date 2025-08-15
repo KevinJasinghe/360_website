@@ -93,9 +93,9 @@ class AIProcessor:
             if not is_valid:
                 return False, f"Audio validation failed: {validation_msg}"
             
-            # Step 2: Process audio to features
+            # Step 2: Process audio to features (clip to 30 seconds)
             print("🔄 Extracting audio features...")
-            features = process_audio_for_inference(wav_file_path)
+            features = process_audio_for_inference(wav_file_path, max_length_seconds=30.0)
             if features is None:
                 return False, "Audio feature extraction failed"
             
