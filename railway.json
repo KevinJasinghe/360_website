@@ -6,7 +6,9 @@
   "deploy": {
     "startCommand": "cd backend && python app_production.py",
     "healthcheckPath": "/health",
-    "healthcheckTimeout": 300
+    "healthcheckTimeout": 300,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
   },
   "environments": {
     "production": {
@@ -15,7 +17,9 @@
         "MAX_CONTENT_LENGTH": "200000000",
         "MAX_AUDIO_DURATION": "300",
         "CLEANUP_INTERVAL": "1800",
-        "MODEL_DOWNLOAD_URL": "https://github.com/KevinJasinghe/360_website/releases/download/v1.0/model_training_model_epochs21_lr0.001_weight_decay0.0001_start20250814_165547_endongoing_epoch021.pth"
+        "MODEL_DOWNLOAD_URL": "https://github.com/KevinJasinghe/360_website/releases/download/v1.0/model_training_model_epochs21_lr0.001_weight_decay0.0001_start20250814_165547_endongoing_epoch021.pth",
+        "PYTHONUNBUFFERED": "1",
+        "PORT": "3001"
       }
     }
   }
