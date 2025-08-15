@@ -1,9 +1,9 @@
 [phases.setup]
-nixPkgs = ['python311', 'python311Packages.pip', 'gcc', 'ffmpeg', 'libsndfile']
+nixPkgs = ['python311', 'pip', 'gcc', 'ffmpeg', 'libsndfile']
 
 [phases.install]
 cmds = [
-    'python -m pip install --no-cache-dir -r requirements.txt'
+    'pip3 install --no-cache-dir -r requirements.txt'
 ]
 
 [phases.build]
