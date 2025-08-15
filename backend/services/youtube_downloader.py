@@ -2,6 +2,9 @@ import yt_dlp
 import os
 import re
 from urllib.parse import urlparse, parse_qs
+import subprocess
+import json
+import tempfile
 
 class YouTubeDownloader:
     
@@ -33,6 +36,39 @@ class YouTubeDownloader:
                 return match.group(1)
         return None
     
+    @staticmethod
+    def get_video_info_cli(url):
+        """Get video info using yt-dlp command line - sometimes more reliable"""
+        try:
+            cmd = [
+                'yt-dlp',
+                '--print', '%(title)s|%(duration)s|%(id)s|%(uploader)s',
+                '--no-warnings',
+                '--quiet',
+                '--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15',
+                '--add-header', 'Accept:*/*',
+                '--add-header', 'Accept-Language:en-US,en;q=0.9',
+                '--referer', 'https://www.youtube.com/',
+                url
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+            
+            if result.returncode == 0 and result.stdout:
+                parts = result.stdout.strip().split('|')
+                if len(parts) >= 4:
+                    return {
+                        'title': parts[0],
+                        'duration': int(parts[1]) if parts[1].isdigit() else 0,
+                        'video_id': parts[2],
+                        'uploader': parts[3]
+                    }, None
+            
+            return None, f"CLI extraction failed: {result.stderr}"
+            
+        except Exception as e:
+            return None, f"CLI method error: {str(e)}"
+
     @staticmethod
     def get_video_info(url):
         """Get video information without downloading"""
@@ -139,8 +175,16 @@ class YouTubeDownloader:
             except Exception as e:
                 print(f"❌ Info strategy {strategy['name']} failed: {str(e)[:100]}")
                 last_error = e
-                if strategy == strategies[-1]:  # Last strategy
-                    raise last_error  # Re-raise the last error
+                if strategy == strategies[-1]:  # Last strategy failed, try CLI fallback
+                    print("🔄 All Python API strategies failed, trying CLI fallback")
+                    cli_info, cli_error = YouTubeDownloader.get_video_info_cli(url)
+                    if cli_info:
+                        info = cli_info
+                        print("✅ CLI fallback succeeded")
+                        break
+                    else:
+                        print(f"❌ CLI fallback failed: {cli_error}")
+                        raise last_error  # Re-raise the last error
                 continue
         
         try:
@@ -157,6 +201,52 @@ class YouTubeDownloader:
         except Exception as e:
             return None, f"Error getting video info: {str(e)}"
     
+    @staticmethod
+    def download_audio_cli(url, output_path, max_duration=600):
+        """Download audio using yt-dlp CLI - sometimes more reliable than Python API"""
+        try:
+            # Use yt-dlp command line with aggressive bot bypass
+            cmd = [
+                'yt-dlp',
+                '--format', 'bestaudio[ext=m4a]/bestaudio/best',
+                '--output', output_path.replace('.wav', '.%(ext)s'),
+                '--no-playlist',
+                '--quiet',
+                '--no-warnings',
+                '--user-agent', 'com.google.ios.youtubemusic/6.42.52 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)',
+                '--add-header', 'Accept:*/*',
+                '--add-header', 'Accept-Language:en-US,en;q=0.9',
+                '--referer', 'https://www.youtube.com/',
+                '--socket-timeout', '15',
+                '--retries', '0',
+                '--fragment-retries', '0',
+                url
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            
+            if result.returncode == 0:
+                # Check if file was created
+                base_path = output_path.replace('.wav', '')
+                possible_files = [
+                    f"{base_path}.m4a", 
+                    f"{base_path}.webm",
+                    f"{base_path}.mp4",
+                    f"{base_path}.opus",
+                    output_path
+                ]
+                
+                for possible_file in possible_files:
+                    if os.path.exists(possible_file):
+                        return True, f"CLI download successful: {possible_file}"
+                
+                return False, "CLI download completed but file not found"
+            else:
+                return False, f"CLI download failed: {result.stderr}"
+                
+        except Exception as e:
+            return False, f"CLI download error: {str(e)}"
+
     @staticmethod
     def download_audio(url, output_path, max_duration=600):  # 10 minutes max
         """Download audio from YouTube video with security checks"""
@@ -299,8 +389,15 @@ class YouTubeDownloader:
                     
                 except Exception as e:
                     print(f"❌ Strategy {strategy['name']} failed: {str(e)}")
-                    if strategy == strategies[-1]:  # Last strategy
-                        raise e  # Re-raise the last error
+                    if strategy == strategies[-1]:  # Last strategy failed, try CLI fallback
+                        print("🔄 All Python API strategies failed, trying CLI fallback")
+                        cli_success, cli_message = YouTubeDownloader.download_audio_cli(url, output_path, max_duration)
+                        if cli_success:
+                            print("✅ CLI fallback download succeeded")
+                            return cli_success, cli_message
+                        else:
+                            print(f"❌ CLI fallback failed: {cli_message}")
+                            raise e  # Re-raise the last error
                     continue
             
             # Check if file was actually downloaded
