@@ -6,6 +6,7 @@ import os
 import requests
 from pathlib import Path
 import hashlib
+import json
 
 class ModelDownloader:
     
