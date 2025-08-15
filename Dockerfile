@@ -1,52 +1,48 @@
-# Multi-stage build optimized for Railway
-FROM node:18-alpine AS frontend-builder
-
-WORKDIR /frontend
-COPY frontend/package*.json ./
-# Use npm ci for faster, reliable builds
-RUN npm ci --only=production
-COPY frontend/ .
-RUN npm run build
-
-# Python backend stage
+# Simplified Railway-optimized build
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies (minimal set)
-RUN apt-get update && apt-get install -y \
+# Install system dependencies with memory optimization
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     ffmpeg \
     libsndfile1 \
     libsndfile1-dev \
-    wget \
-    && rm -rf /var/lib/apt/lists/*
+    curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/cache/apt/*
 
-# Copy requirements first for better Docker caching
+# Copy and install Python requirements first (better caching)
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --no-deps -r requirements.txt || \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copy backend code (excluding large model file)
+# Copy backend code
 COPY backend/ .
 
-# Copy built frontend from previous stage
-COPY --from=frontend-builder /frontend/build ./static
+# Create necessary directories
+RUN mkdir -p uploads logs static
 
-# Create directories
-RUN mkdir -p uploads logs
+# Copy a simple static index.html (skip React build for now)
+RUN echo '<!DOCTYPE html>
+<html><head><title>Piano Transcription API</title></head>
+<body>
+<h1>Piano Transcription API</h1>
+<p>Backend is running. API endpoints available at /api/</p>
+<p>Health check: <a href="/health">/health</a></p>
+</body></html>' > static/index.html
 
-# Set environment variables for Railway
+# Set Railway environment variables
 ENV FLASK_ENV=production
 ENV PYTHONPATH=/app
 ENV PORT=3001
+ENV PYTHONUNBUFFERED=1
 
-# Expose Railway port
+# Expose port
 EXPOSE $PORT
 
-# Health check (simplified for Railway)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get(f'http://localhost:{os.environ.get(\"PORT\", 3001)}/health')" || exit 1
-
-# Start with production app
+# Start production app
 CMD ["python", "app_production.py"]

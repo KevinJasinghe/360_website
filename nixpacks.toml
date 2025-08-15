@@ -1,15 +1,17 @@
 [phases.setup]
 nixPkgs = ['python311', 'pip', 'gcc', 'ffmpeg', 'libsndfile']
-nixLibs = ['glibc', 'gcc-unwrapped']
+nixLibs = ['glibc']
 
 [phases.install]
 cmds = [
+    'mkdir -p backend/uploads backend/logs backend/static',
+    'echo "<!DOCTYPE html><html><head><title>Piano Transcription API</title></head><body><h1>Piano Transcription API</h1><p>Backend is running. API endpoints available at /api/</p><p>Health check: <a href=\"/health\">/health</a></p></body></html>" > backend/static/index.html',
     'pip install --no-cache-dir -r requirements.txt'
 ]
 
 [phases.build]
 cmds = [
-    'echo "Build completed"'
+    'echo "Railway Nixpacks build completed successfully"'
 ]
 
 [start]
@@ -18,3 +20,4 @@ cmd = 'cd backend && python app_production.py'
 [variables]
 PYTHONUNBUFFERED = "1"
 FLASK_ENV = "production"
+PORT = "3001"

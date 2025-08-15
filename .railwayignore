@@ -13,11 +13,12 @@ logs/
 .env.local
 .DS_Store
 
-# Exclude Node.js frontend build artifacts
-frontend/node_modules/
-frontend/.next/
-frontend/build/
-frontend/.cache/
+# Exclude entire frontend for now (use API only)
+frontend/
+
+# Exclude Docker files (using Nixpacks instead)
+Dockerfile
+docker-compose.yml
 
 # Exclude ALL large media files
 *.wav
@@ -43,6 +44,9 @@ convert_trained_model_midi.py
 save_trained_model.py
 save_model_code.py
 check_setup.py
+audio_comparison.py
+midi_to_wav.py
+simple_midi_to_wav.py
 
 # Exclude docs and plans
 *.md
@@ -53,3 +57,8 @@ RAILWAY_DEPLOYMENT.md
 # Exclude test files
 test.wav
 test_output*
+*.npz
+*.npy
+
+# Exclude setup files
+setup.sh
