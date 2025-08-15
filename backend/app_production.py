@@ -24,7 +24,8 @@ def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_ENV', 'production')
     
-    app = Flask(__name__)
+    # Configure Flask to use our custom static folder
+    app = Flask(__name__, static_folder='static', static_url_path='/static')
     
     # Load configuration
     app.config.from_object(config[config_name])
@@ -167,6 +168,39 @@ def register_general_routes(app):
                 'max_duration_seconds': app.config['MAX_AUDIO_DURATION']
             }
         })
+    
+    # Debug route to check static directory contents
+    @app.route('/debug/static')
+    def debug_static():
+        """Debug endpoint to check static directory contents"""
+        try:
+            static_dir = os.path.join(os.path.dirname(__file__), 'static')
+            contents = {}
+            
+            if os.path.exists(static_dir):
+                contents['static_root'] = os.listdir(static_dir)
+                
+                # Check nested static directory
+                nested_static = os.path.join(static_dir, 'static')
+                if os.path.exists(nested_static):
+                    contents['nested_static'] = os.listdir(nested_static)
+                    
+                    # Check CSS and JS directories
+                    css_dir = os.path.join(nested_static, 'css')
+                    js_dir = os.path.join(nested_static, 'js')
+                    
+                    if os.path.exists(css_dir):
+                        contents['css_files'] = os.listdir(css_dir)
+                    if os.path.exists(js_dir):
+                        contents['js_files'] = os.listdir(js_dir)
+            
+            return jsonify({
+                'static_dir': static_dir,
+                'exists': os.path.exists(static_dir),
+                'contents': contents
+            })
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
     
     # Serve React frontend in both development and production
     @app.route('/', defaults={'path': ''})

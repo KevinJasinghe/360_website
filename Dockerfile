@@ -55,14 +55,17 @@ COPY *.pth ./
 RUN mkdir -p backend/static
 
 # Copy built frontend from frontend-builder stage
-# Copy all React build files to backend/static/
-COPY --from=frontend-builder /app/frontend/build/ backend/static/
+# Copy root files to backend/static/
+COPY --from=frontend-builder /app/frontend/build/index.html backend/static/
+COPY --from=frontend-builder /app/frontend/build/asset-manifest.json backend/static/
+# Copy CSS and JS files to the correct locations that Flask expects
+COPY --from=frontend-builder /app/frontend/build/static/css/ backend/static/css/
+COPY --from=frontend-builder /app/frontend/build/static/js/ backend/static/js/
 
 # Debug: List what was copied to static directory
 RUN echo "=== Contents of backend/static ===" && ls -la backend/static/
-RUN echo "=== Contents of backend/static/static ===" && ls -la backend/static/static/ || echo "nested static directory doesn't exist"
-RUN echo "=== Contents of backend/static/static/css ===" && ls -la backend/static/static/css/ || echo "css directory doesn't exist"
-RUN echo "=== Contents of backend/static/static/js ===" && ls -la backend/static/static/js/ || echo "js directory doesn't exist"
+RUN echo "=== Contents of backend/static/css ===" && ls -la backend/static/css/ || echo "css directory doesn't exist"  
+RUN echo "=== Contents of backend/static/js ===" && ls -la backend/static/js/ || echo "js directory doesn't exist"
 
 # Make sure scripts in .local are usable
 ENV PATH=/root/.local/bin:$PATH
