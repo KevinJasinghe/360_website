@@ -51,14 +51,15 @@ COPY backend/ backend/
 # Copy the trained model file
 COPY *.pth ./
 
+# Create the static directory first
+RUN mkdir -p backend/static
+
 # Copy built frontend from frontend-builder stage
-# First copy the root files (index.html, etc.)
-COPY --from=frontend-builder /app/frontend/build/*.* backend/static/
-# Then copy the static assets to the correct location 
-COPY --from=frontend-builder /app/frontend/build/static/ backend/static/static/
+# Copy all React build files to backend/static/
+COPY --from=frontend-builder /app/frontend/build/ backend/static/
 
 # Debug: List what was copied to static directory
-RUN echo "=== Contents of backend/static ===" && ls -la backend/static/ || echo "static directory doesn't exist"
+RUN echo "=== Contents of backend/static ===" && ls -la backend/static/
 RUN echo "=== Contents of backend/static/static ===" && ls -la backend/static/static/ || echo "nested static directory doesn't exist"
 
 # Make sure scripts in .local are usable
