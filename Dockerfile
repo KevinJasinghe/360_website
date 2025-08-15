@@ -27,13 +27,7 @@ COPY backend/ .
 RUN mkdir -p uploads logs static
 
 # Copy a simple static index.html (skip React build for now)
-RUN echo '<!DOCTYPE html>
-<html><head><title>Piano Transcription API</title></head>
-<body>
-<h1>Piano Transcription API</h1>
-<p>Backend is running. API endpoints available at /api/</p>
-<p>Health check: <a href="/health">/health</a></p>
-</body></html>' > static/index.html
+RUN echo '<!DOCTYPE html><html><head><title>Piano Transcription API</title></head><body><h1>Piano Transcription API</h1><p>Backend is running. API endpoints available at /api/</p><p>Health check: <a href="/health">/health</a></p></body></html>' > static/index.html
 
 # Set Railway environment variables
 ENV FLASK_ENV=production
