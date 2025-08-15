@@ -36,34 +36,62 @@ class YouTubeDownloader:
     @staticmethod
     def get_video_info(url):
         """Get video information without downloading"""
-        try:
-            ydl_opts = {
-                'quiet': True,
-                'no_warnings': True,
+        # Try multiple strategies for getting video info
+        strategies = [
+            {
+                'name': 'android_embedded',
                 'extractor_args': {
                     'youtube': {
-                        'player_client': ['android_creator', 'android', 'web'],
-                        'player_skip': ['webpage', 'configs'],
-                        'skip': ['hls', 'dash']
+                        'player_client': ['android_embedded'],
+                        'player_skip': ['webpage'],
                     }
                 },
                 'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Linux; Android 11; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36'
+                    'User-Agent': 'com.google.android.youtube/17.31.35 (Linux; U; Android 11) gzip'
+                }
+            },
+            {
+                'name': 'ios',
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['ios'],
+                        'player_skip': ['webpage'],
+                    }
+                },
+                'http_headers': {
+                    'User-Agent': 'com.google.ios.youtube/17.33.2 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)'
                 }
             }
+        ]
+        
+        for strategy in strategies:
+            try:
+                ydl_opts = {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': strategy['extractor_args'],
+                    'http_headers': strategy['http_headers']
+                }
+                
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(url, download=False)
+                    break  # Success, exit loop
+                    
+            except Exception as e:
+                if strategy == strategies[-1]:  # Last strategy
+                    raise e  # Re-raise the last error
+                continue
+        
+        try:
+            duration = info.get('duration', 0)
+            title = info.get('title', 'Unknown')
             
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url, download=False)
-                
-                duration = info.get('duration', 0)
-                title = info.get('title', 'Unknown')
-                
-                return {
-                    'title': title,
-                    'duration': duration,
-                    'video_id': info.get('id'),
-                    'uploader': info.get('uploader', 'Unknown')
-                }, None
+            return {
+                'title': title,
+                'duration': duration,
+                'video_id': info.get('id'),
+                'uploader': info.get('uploader', 'Unknown')
+            }, None
                 
         except Exception as e:
             return None, f"Error getting video info: {str(e)}"
@@ -97,36 +125,78 @@ class YouTubeDownloader:
                 print(f"   Allowed paths: {allowed_paths}")
                 return False, "Invalid output path"
             
-            # Download options - use more robust format selection and avoid bot detection
-            ydl_opts = {
-                'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',  # Max 100MB
-                'outtmpl': output_path.replace('.wav', '.%(ext)s'),
-                'noplaylist': True,
-                'quiet': False,  # Enable logging for debugging
-                'no_warnings': False,
-                'extract_flat': False,
-                'socket_timeout': 30,
-                'retries': 3,
-                'extractor_args': {
-                    'youtube': {
-                        'player_client': ['android_creator', 'android', 'web'],
-                        'player_skip': ['webpage', 'configs'],
-                        'skip': ['hls', 'dash']
+            # Try multiple download strategies to avoid bot detection
+            strategies = [
+                {
+                    'name': 'android_embedded',
+                    'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['android_embedded'],
+                            'player_skip': ['webpage'],
+                        }
+                    },
+                    'http_headers': {
+                        'User-Agent': 'com.google.android.youtube/17.31.35 (Linux; U; Android 11) gzip'
                     }
                 },
-                'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Linux; Android 11; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                    'Accept-Encoding': 'gzip, deflate',
-                    'DNT': '1',
-                    'Connection': 'keep-alive',
-                    'Upgrade-Insecure-Requests': '1'
+                {
+                    'name': 'ios',
+                    'format': 'bestaudio[ext=m4a]/bestaudio/best[filesize<100M]',
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['ios'],
+                            'player_skip': ['webpage'],
+                        }
+                    },
+                    'http_headers': {
+                        'User-Agent': 'com.google.ios.youtube/17.33.2 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)'
+                    }
+                },
+                {
+                    'name': 'web_embedded',
+                    'format': 'bestaudio/best[filesize<100M]',
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['web_embedded'],
+                            'player_skip': ['webpage'],
+                        }
+                    },
+                    'http_headers': {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
                 }
-            }
+            ]
             
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
+            for strategy in strategies:
+                try:
+                    print(f"🔄 Trying download strategy: {strategy['name']}")
+                    
+                    ydl_opts = {
+                        'format': strategy['format'],
+                        'outtmpl': output_path.replace('.wav', '.%(ext)s'),
+                        'noplaylist': True,
+                        'quiet': True,  # Reduce noise for multiple attempts
+                        'no_warnings': True,
+                        'extract_flat': False,
+                        'socket_timeout': 30,
+                        'retries': 1,  # Reduce retries per strategy
+                        'extractor_args': strategy['extractor_args'],
+                        'http_headers': strategy['http_headers']
+                    }
+                    
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        ydl.download([url])
+                    
+                    # If we get here, download was successful
+                    print(f"✅ Download successful with strategy: {strategy['name']}")
+                    break
+                    
+                except Exception as e:
+                    print(f"❌ Strategy {strategy['name']} failed: {str(e)}")
+                    if strategy == strategies[-1]:  # Last strategy
+                        raise e  # Re-raise the last error
+                    continue
             
             # Check if file was actually downloaded
             base_path = output_path.replace('.wav', '')

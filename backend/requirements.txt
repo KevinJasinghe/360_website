@@ -6,7 +6,7 @@ werkzeug==2.3.7
 requests==2.31.0
 
 # File processing
-yt-dlp==2023.12.30
+yt-dlp>=2025.08.11
 ffmpeg-python==0.2.0
 uuid==1.30
 
