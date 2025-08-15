@@ -172,14 +172,49 @@ def register_general_routes(app):
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
     def serve(path):
-        # First try to serve the requested file from static directory
+        app.logger.info(f"🔍 Static file request: path='{path}'")
+        
+        # Calculate paths
+        backend_dir = os.path.dirname(__file__)
+        static_dir = os.path.join(backend_dir, 'static')
+        app.logger.info(f"📁 Backend dir: {backend_dir}")
+        app.logger.info(f"📁 Static dir: {static_dir}")
+        app.logger.info(f"📁 Static dir exists: {os.path.exists(static_dir)}")
+        
         if path != "":
-            static_file_path = os.path.join(os.path.dirname(__file__), 'static', path)
+            static_file_path = os.path.join(static_dir, path)
+            app.logger.info(f"🔍 Looking for: {static_file_path}")
+            app.logger.info(f"📂 File exists: {os.path.exists(static_file_path)}")
+            
+            # List contents of static directory for debugging
+            if os.path.exists(static_dir):
+                contents = os.listdir(static_dir)
+                app.logger.info(f"📂 Static dir contents: {contents}")
+                
+                # If looking for static/css or static/js, check nested structure
+                if path.startswith('static/'):
+                    nested_path = os.path.join(static_dir, path)
+                    app.logger.info(f"🔍 Nested path check: {nested_path}")
+                    app.logger.info(f"📂 Nested exists: {os.path.exists(nested_path)}")
+                    if os.path.exists(nested_path):
+                        return send_from_directory(static_dir, path)
+            
             if os.path.exists(static_file_path):
-                return send_from_directory(os.path.join(os.path.dirname(__file__), 'static'), path)
+                app.logger.info(f"✅ Serving file: {static_file_path}")
+                return send_from_directory(static_dir, path)
+            else:
+                app.logger.warning(f"❌ File not found: {static_file_path}")
         
         # Default to serving index.html for SPA routing
-        return send_from_directory(os.path.join(os.path.dirname(__file__), 'static'), 'index.html')
+        index_path = os.path.join(static_dir, 'index.html')
+        app.logger.info(f"📄 Serving index.html from: {index_path}")
+        app.logger.info(f"📄 Index exists: {os.path.exists(index_path)}")
+        
+        if os.path.exists(index_path):
+            return send_from_directory(static_dir, 'index.html')
+        else:
+            app.logger.error(f"❌ index.html not found at: {index_path}")
+            return "Static files not configured", 500
 
 # Global processing status storage
 # In production, this should be replaced with Redis or a database
