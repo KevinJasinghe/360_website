@@ -39,33 +39,47 @@ class YouTubeDownloader:
         # Try multiple strategies for getting video info
         strategies = [
             {
-                'name': 'android_embedded',
+                'name': 'tv_embedded',
                 'extractor_args': {
                     'youtube': {
-                        'player_client': ['android_embedded'],
+                        'player_client': ['tv_embedded'],
                         'player_skip': ['webpage'],
                     }
                 },
                 'http_headers': {
-                    'User-Agent': 'com.google.android.youtube/17.31.35 (Linux; U; Android 11) gzip'
+                    'User-Agent': 'Mozilla/5.0 (SMART-TV; Linux; Tizen 2.4.0) AppleWebKit/538.1'
                 }
             },
             {
-                'name': 'ios',
+                'name': 'android_testsuite',
                 'extractor_args': {
                     'youtube': {
-                        'player_client': ['ios'],
+                        'player_client': ['android_testsuite'],
                         'player_skip': ['webpage'],
                     }
                 },
                 'http_headers': {
-                    'User-Agent': 'com.google.ios.youtube/17.33.2 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)'
+                    'User-Agent': 'com.google.android.youtube/17.36.4 (Linux; U; Android 12; GB) gzip'
+                }
+            },
+            {
+                'name': 'web_music',
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['web_music'],
+                        'player_skip': ['webpage'],
+                    }
+                },
+                'http_headers': {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
                 }
             }
         ]
         
+        last_error = None
         for strategy in strategies:
             try:
+                print(f"🔄 Trying info strategy: {strategy['name']}")
                 ydl_opts = {
                     'quiet': True,
                     'no_warnings': True,
@@ -75,11 +89,14 @@ class YouTubeDownloader:
                 
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(url, download=False)
+                    print(f"✅ Info strategy {strategy['name']} succeeded")
                     break  # Success, exit loop
                     
             except Exception as e:
+                print(f"❌ Info strategy {strategy['name']} failed: {str(e)[:100]}")
+                last_error = e
                 if strategy == strategies[-1]:  # Last strategy
-                    raise e  # Re-raise the last error
+                    raise last_error  # Re-raise the last error
                 continue
         
         try:
@@ -128,42 +145,55 @@ class YouTubeDownloader:
             # Try multiple download strategies to avoid bot detection
             strategies = [
                 {
-                    'name': 'android_embedded',
+                    'name': 'tv_embedded',
                     'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['android_embedded'],
+                            'player_client': ['tv_embedded'],
                             'player_skip': ['webpage'],
+                        }
+                    },
+                    'http_headers': {
+                        'User-Agent': 'Mozilla/5.0 (SMART-TV; Linux; Tizen 2.4.0) AppleWebKit/538.1'
+                    }
+                },
+                {
+                    'name': 'android_testsuite',
+                    'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['android_testsuite'],
+                            'player_skip': ['webpage'],
+                        }
+                    },
+                    'http_headers': {
+                        'User-Agent': 'com.google.android.youtube/17.36.4 (Linux; U; Android 12; GB) gzip'
+                    }
+                },
+                {
+                    'name': 'web_music',
+                    'format': 'bestaudio[ext=m4a]/bestaudio/best[filesize<100M]',
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['web_music'],
+                            'player_skip': ['webpage'],
+                        }
+                    },
+                    'http_headers': {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    }
+                },
+                {
+                    'name': 'android_embedded_fallback',
+                    'format': 'bestaudio/best[filesize<100M]',
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['android_embedded'],
+                            'player_skip': ['webpage', 'configs'],
                         }
                     },
                     'http_headers': {
                         'User-Agent': 'com.google.android.youtube/17.31.35 (Linux; U; Android 11) gzip'
-                    }
-                },
-                {
-                    'name': 'ios',
-                    'format': 'bestaudio[ext=m4a]/bestaudio/best[filesize<100M]',
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['ios'],
-                            'player_skip': ['webpage'],
-                        }
-                    },
-                    'http_headers': {
-                        'User-Agent': 'com.google.ios.youtube/17.33.2 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)'
-                    }
-                },
-                {
-                    'name': 'web_embedded',
-                    'format': 'bestaudio/best[filesize<100M]',
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['web_embedded'],
-                            'player_skip': ['webpage'],
-                        }
-                    },
-                    'http_headers': {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                     }
                 }
             ]
