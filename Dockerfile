@@ -1,5 +1,15 @@
 # Multi-stage build to minimize final image size
-FROM python:3.11-slim as builder
+
+# Stage 1: Build React frontend
+FROM node:18-alpine as frontend-builder
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci --only=production
+COPY frontend/ ./
+RUN npm run build
+
+# Stage 2: Python dependencies
+FROM python:3.11-slim as python-builder
 
 # Install system dependencies needed for building Python packages
 RUN apt-get update && apt-get install -y \
@@ -18,7 +28,7 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Production stage
+# Stage 3: Production
 FROM python:3.11-slim
 
 # Install only runtime dependencies
@@ -29,19 +39,22 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 
 # Copy Python packages from builder stage
-COPY --from=builder /root/.local /root/.local
+COPY --from=python-builder /root/.local /root/.local
 
 # Set working directory
 WORKDIR /app
 
-# Copy application code
-COPY . .
+# Copy backend application code
+COPY backend/ backend/
+
+# Copy built frontend from frontend-builder stage
+COPY --from=frontend-builder /app/frontend/build/ backend/static/
 
 # Make sure scripts in .local are usable
 ENV PATH=/root/.local/bin:$PATH
 
 # Create necessary directories
-RUN mkdir -p backend/uploads backend/logs backend/static
+RUN mkdir -p backend/uploads backend/logs
 
 # Expose port
 EXPOSE $PORT

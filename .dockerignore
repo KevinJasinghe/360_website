@@ -30,9 +30,9 @@ logs/
 tmp/
 temp/
 
-# Frontend build artifacts and dependencies
-frontend/
-node_modules/
+# Frontend build artifacts (keep source, exclude built files)
+frontend/build/
+frontend/node_modules/
 npm-debug.log
 
 # Development and test files
