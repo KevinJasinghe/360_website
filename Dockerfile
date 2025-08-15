@@ -54,6 +54,10 @@ COPY *.pth ./
 # Copy built frontend from frontend-builder stage, preserving structure
 COPY --from=frontend-builder /app/frontend/build/ backend/static/
 
+# Debug: List what was copied to static directory
+RUN echo "=== Contents of backend/static ===" && ls -la backend/static/ || echo "static directory doesn't exist"
+RUN echo "=== Contents of backend/static/static ===" && ls -la backend/static/static/ || echo "nested static directory doesn't exist"
+
 # Make sure scripts in .local are usable
 ENV PATH=/root/.local/bin:$PATH
 
