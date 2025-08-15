@@ -72,8 +72,23 @@ class YouTubeDownloader:
     @staticmethod
     def get_video_info(url):
         """Get video information without downloading"""
-        # Try multiple strategies for getting video info - Enhanced Aug 2025
+        # Try multiple strategies for getting video info - Production-optimized Aug 2025
         strategies = [
+            {
+                'name': 'server_android_vr',
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['android_vr'],
+                        'player_skip': ['webpage', 'configs'],
+                    }
+                },
+                'http_headers': {
+                    'User-Agent': 'com.google.android.apps.youtube.vr.oculus/1.56.21 (Linux; U; Android 12; eureka-user Build/SQ3A.220605.009.A1)',
+                    'Accept': '*/*',
+                    'X-Forwarded-For': '8.8.8.8',  # Google DNS to appear less server-like
+                    'Accept-Language': 'en-US,en;q=0.9'
+                }
+            },
             {
                 'name': 'mweb_tier_2',
                 'extractor_args': {
@@ -276,8 +291,24 @@ class YouTubeDownloader:
                 print(f"   Allowed paths: {allowed_paths}")
                 return False, "Invalid output path"
             
-            # Try multiple download strategies to avoid bot detection - Enhanced Aug 2025
+            # Try multiple download strategies to avoid bot detection - Production-optimized Aug 2025
             strategies = [
+                {
+                    'name': 'server_android_vr',
+                    'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['android_vr'],
+                            'player_skip': ['webpage', 'configs'],
+                        }
+                    },
+                    'http_headers': {
+                        'User-Agent': 'com.google.android.apps.youtube.vr.oculus/1.56.21 (Linux; U; Android 12; eureka-user Build/SQ3A.220605.009.A1)',
+                        'Accept': '*/*',
+                        'X-Forwarded-For': '8.8.8.8',  # Google DNS to appear less server-like
+                        'Accept-Language': 'en-US,en;q=0.9'
+                    }
+                },
                 {
                     'name': 'mweb_tier_2',
                     'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
