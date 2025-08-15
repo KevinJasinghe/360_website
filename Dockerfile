@@ -51,8 +51,11 @@ COPY backend/ backend/
 # Copy the trained model file
 COPY *.pth ./
 
-# Copy built frontend from frontend-builder stage, preserving structure
-COPY --from=frontend-builder /app/frontend/build/ backend/static/
+# Copy built frontend from frontend-builder stage
+# First copy the root files (index.html, etc.)
+COPY --from=frontend-builder /app/frontend/build/*.* backend/static/
+# Then copy the static assets to the correct location 
+COPY --from=frontend-builder /app/frontend/build/static/ backend/static/static/
 
 # Debug: List what was copied to static directory
 RUN echo "=== Contents of backend/static ===" && ls -la backend/static/ || echo "static directory doesn't exist"
