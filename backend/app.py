@@ -10,6 +10,7 @@ import time
 from routes.upload import FileUploadResource, FileInfoResource
 from routes.youtube import YouTubeDownloadResource, YouTubeInfoResource, YouTubePreviewResource
 from routes.process import ProcessResource, DownloadResource
+from routes.sheet_music import SheetMusicResource, SheetMusicDownloadResource, SheetMusicInfoResource, SheetMusicTestResource
 
 # Import AI processor
 from services.ai_processor import AIProcessor
@@ -72,6 +73,10 @@ api.add_resource(YouTubeInfoResource, '/api/youtube/<string:download_id>')
 api.add_resource(YouTubePreviewResource, '/api/youtube/preview')
 api.add_resource(ProcessResource, '/api/process/<string:process_id>')
 api.add_resource(DownloadResource, '/api/download/<string:process_id>')
+api.add_resource(SheetMusicResource, '/api/sheet-music/<string:process_id>')
+api.add_resource(SheetMusicDownloadResource, '/api/sheet-music/download/<string:process_id>')
+api.add_resource(SheetMusicInfoResource, '/api/sheet-music/info')
+api.add_resource(SheetMusicTestResource, '/api/sheet-music/test')
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -101,4 +106,5 @@ def api_info():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=3001)
+    port = int(os.environ.get('PORT', 3000))
+    app.run(debug=True, host='0.0.0.0', port=port)

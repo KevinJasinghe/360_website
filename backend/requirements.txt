@@ -22,6 +22,9 @@ pretty_midi>=0.2.9
 # Optional: for better performance
 numba>=0.56.0  # Used by librosa for speed
 
+# Sheet music generation
+music21>=9.7.0    # Sheet music and MusicXML conversion
+
 # Development/testing (optional)
 matplotlib>=3.5.0  # For visualization 
 tqdm>=4.60.0      # Progress bars

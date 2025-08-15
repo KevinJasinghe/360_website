@@ -5,6 +5,8 @@ import './ResultDisplay.css';
 const ResultDisplay = ({ result, processId, onReset }) => {
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState('');
+  const [sheetMusicDownloading, setSheetMusicDownloading] = useState(false);
+  const [sheetMusicError, setSheetMusicError] = useState('');
 
   const handleDownload = async () => {
     if (!result.midiReady) {
@@ -56,6 +58,60 @@ const ResultDisplay = ({ result, processId, onReset }) => {
     }
   };
 
+  const handleSheetMusicDownload = async (format = 'musicxml') => {
+    if (!result.midiReady) {
+      setSheetMusicError('MIDI file is not ready for sheet music conversion');
+      return;
+    }
+
+    setSheetMusicDownloading(true);
+    setSheetMusicError('');
+
+    try {
+      // First, generate the sheet music
+      const generateResponse = await axios.post(`/api/sheet-music/${processId}`, {
+        format: format
+      });
+
+      if (generateResponse.data.success) {
+        // Then download it
+        const downloadResponse = await axios.get(`/api/sheet-music/download/${processId}?format=${format}`, {
+          responseType: 'blob',
+        });
+
+        // Create blob link to download
+        const url = window.URL.createObjectURL(new Blob([downloadResponse.data]));
+        const link = document.createElement('a');
+        link.href = url;
+
+        // Set filename based on format
+        const filename = format === 'musicxml' 
+          ? `sheet_music_${processId.slice(0, 8)}.xml`
+          : `sheet_music_${processId.slice(0, 8)}.png`;
+
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } else {
+        setSheetMusicError('Failed to generate sheet music: ' + generateResponse.data.message);
+      }
+
+    } catch (error) {
+      console.error('Sheet music download error:', error);
+      if (error.response?.data?.error) {
+        setSheetMusicError(error.response.data.error);
+      } else {
+        setSheetMusicError('Sheet music download failed: ' + error.message);
+      }
+    } finally {
+      setSheetMusicDownloading(false);
+    }
+  };
+
   const formatProcessId = (id) => {
     return id.slice(0, 8) + '...';
   };
@@ -100,8 +156,28 @@ const ResultDisplay = ({ result, processId, onReset }) => {
 
             <button
               type="button"
+              className="btn btn-primary download-btn"
+              onClick={() => handleSheetMusicDownload('musicxml')}
+              disabled={sheetMusicDownloading || !result.midiReady}
+              style={{ marginLeft: '10px' }}
+            >
+              {sheetMusicDownloading ? (
+                <>
+                  <span className="loading-spinner"></span>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  🎼 Download Sheet Music (XML)
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
               className="btn btn-secondary"
               onClick={onReset}
+              style={{ marginLeft: '10px' }}
             >
               🔄 Convert Another File
             </button>
@@ -110,6 +186,12 @@ const ResultDisplay = ({ result, processId, onReset }) => {
           {downloadError && (
             <div className="error-message">
               <span>❌ {downloadError}</span>
+            </div>
+          )}
+
+          {sheetMusicError && (
+            <div className="error-message">
+              <span>❌ Sheet Music: {sheetMusicError}</span>
             </div>
           )}
         </div>
