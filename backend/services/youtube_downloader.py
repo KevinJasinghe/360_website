@@ -36,8 +36,55 @@ class YouTubeDownloader:
     @staticmethod
     def get_video_info(url):
         """Get video information without downloading"""
-        # Try multiple strategies for getting video info - Updated for 2025
+        # Try multiple strategies for getting video info - Enhanced Aug 2025
         strategies = [
+            {
+                'name': 'mweb_tier_2',
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['mweb'],
+                        'player_skip': ['webpage', 'configs'],
+                    }
+                },
+                'http_headers': {
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36',
+                    'Accept': '*/*',
+                    'Accept-Encoding': 'gzip, deflate',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                    'Sec-Fetch-Dest': 'empty',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Site': 'same-origin'
+                }
+            },
+            {
+                'name': 'ios_creator',
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['ios_creator'],
+                        'player_skip': ['webpage'],
+                    }
+                },
+                'http_headers': {
+                    'User-Agent': 'com.google.ios.ytcreator/1.19.8.15622 (iPhone15,2; U; CPU iOS 16_6 like Mac OS X)',
+                    'Accept': '*/*',
+                    'Accept-Language': 'en-US,en;q=0.9'
+                }
+            },
+            {
+                'name': 'android_vr',
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['android_vr'],
+                        'player_skip': ['webpage'],
+                    }
+                },
+                'http_headers': {
+                    'User-Agent': 'com.google.android.apps.youtube.vr.oculus/1.56.21 (Linux; U; Android 12; eureka-user Build/SQ3A.220605.009.A1)',
+                    'Accept': '*/*'
+                }
+            },
             {
                 'name': 'ios_music',
                 'extractor_args': {
@@ -47,43 +94,22 @@ class YouTubeDownloader:
                     }
                 },
                 'http_headers': {
-                    'User-Agent': 'com.google.ios.youtubemusic/6.42.52 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)'
+                    'User-Agent': 'com.google.ios.youtubemusic/6.42.52 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)',
+                    'Accept': '*/*'
                 }
             },
             {
-                'name': 'android_creator',
-                'extractor_args': {
-                    'youtube': {
-                        'player_client': ['android_creator'],
-                        'player_skip': ['webpage'],
-                    }
-                },
-                'http_headers': {
-                    'User-Agent': 'com.google.android.apps.youtube.creator/22.30.100 (Linux; U; Android 11) gzip'
-                }
-            },
-            {
-                'name': 'tv_embedded',
+                'name': 'tv_embedded_fallback',
                 'extractor_args': {
                     'youtube': {
                         'player_client': ['tv_embedded'],
-                        'player_skip': ['webpage'],
+                        'player_skip': ['webpage', 'configs'],
+                        'include_incomplete_formats': False
                     }
                 },
                 'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (SMART-TV; Linux; Tizen 2.4.0) AppleWebKit/538.1'
-                }
-            },
-            {
-                'name': 'android_testsuite',
-                'extractor_args': {
-                    'youtube': {
-                        'player_client': ['android_testsuite'],
-                        'player_skip': ['webpage'],
-                    }
-                },
-                'http_headers': {
-                    'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip'
+                    'User-Agent': 'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/40.13031-qa (unlike Gecko) v8/8.5.210.20 gles Starboard/15',
+                    'Accept': '*/*'
                 }
             }
         ]
@@ -96,7 +122,13 @@ class YouTubeDownloader:
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': strategy['extractor_args'],
-                    'http_headers': strategy['http_headers']
+                    'http_headers': strategy['http_headers'],
+                    'socket_timeout': 10,
+                    'retries': 0,  # No retries per strategy to fail fast
+                    'fragment_retries': 0,
+                    'skip_unavailable_fragments': True,
+                    'geo_bypass': True,
+                    'no_check_certificate': True
                 }
                 
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -154,8 +186,58 @@ class YouTubeDownloader:
                 print(f"   Allowed paths: {allowed_paths}")
                 return False, "Invalid output path"
             
-            # Try multiple download strategies to avoid bot detection - Updated for 2025
+            # Try multiple download strategies to avoid bot detection - Enhanced Aug 2025
             strategies = [
+                {
+                    'name': 'mweb_tier_2',
+                    'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['mweb'],
+                            'player_skip': ['webpage', 'configs'],
+                        }
+                    },
+                    'http_headers': {
+                        'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36',
+                        'Accept': '*/*',
+                        'Accept-Encoding': 'gzip, deflate',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache',
+                        'Sec-Fetch-Dest': 'empty',
+                        'Sec-Fetch-Mode': 'cors',
+                        'Sec-Fetch-Site': 'same-origin'
+                    }
+                },
+                {
+                    'name': 'ios_creator',
+                    'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['ios_creator'],
+                            'player_skip': ['webpage'],
+                        }
+                    },
+                    'http_headers': {
+                        'User-Agent': 'com.google.ios.ytcreator/1.19.8.15622 (iPhone15,2; U; CPU iOS 16_6 like Mac OS X)',
+                        'Accept': '*/*',
+                        'Accept-Language': 'en-US,en;q=0.9'
+                    }
+                },
+                {
+                    'name': 'android_vr',
+                    'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['android_vr'],
+                            'player_skip': ['webpage'],
+                        }
+                    },
+                    'http_headers': {
+                        'User-Agent': 'com.google.android.apps.youtube.vr.oculus/1.56.21 (Linux; U; Android 12; eureka-user Build/SQ3A.220605.009.A1)',
+                        'Accept': '*/*'
+                    }
+                },
                 {
                     'name': 'ios_music',
                     'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
@@ -166,62 +248,23 @@ class YouTubeDownloader:
                         }
                     },
                     'http_headers': {
-                        'User-Agent': 'com.google.ios.youtubemusic/6.42.52 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)'
+                        'User-Agent': 'com.google.ios.youtubemusic/6.42.52 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)',
+                        'Accept': '*/*'
                     }
                 },
                 {
-                    'name': 'android_creator',
-                    'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['android_creator'],
-                            'player_skip': ['webpage'],
-                        }
-                    },
-                    'http_headers': {
-                        'User-Agent': 'com.google.android.apps.youtube.creator/22.30.100 (Linux; U; Android 11) gzip'
-                    }
-                },
-                {
-                    'name': 'tv_embedded',
-                    'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['tv_embedded'],
-                            'player_skip': ['webpage'],
-                        }
-                    },
-                    'http_headers': {
-                        'User-Agent': 'Mozilla/5.0 (SMART-TV; Linux; Tizen 2.4.0) AppleWebKit/538.1'
-                    }
-                },
-                {
-                    'name': 'android_testsuite',
-                    'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[filesize<100M]',
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['android_testsuite'],
-                            'player_skip': ['webpage'],
-                        }
-                    },
-                    'http_headers': {
-                        'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip'
-                    }
-                },
-                {
-                    'name': 'web_safari',
+                    'name': 'tv_embedded_final',
                     'format': 'bestaudio[ext=m4a]/bestaudio/best[filesize<100M]',
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['web'],
-                            'player_skip': ['configs'],
+                            'player_client': ['tv_embedded'],
+                            'player_skip': ['webpage', 'configs'],
+                            'include_incomplete_formats': False
                         }
                     },
                     'http_headers': {
-                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'Accept-Language': 'en-us,en;q=0.5',
-                        'Sec-Fetch-Mode': 'navigate'
+                        'User-Agent': 'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/40.13031-qa (unlike Gecko) v8/8.5.210.20 gles Starboard/15',
+                        'Accept': '*/*'
                     }
                 }
             ]
@@ -237,8 +280,12 @@ class YouTubeDownloader:
                         'quiet': True,  # Reduce noise for multiple attempts
                         'no_warnings': True,
                         'extract_flat': False,
-                        'socket_timeout': 30,
-                        'retries': 1,  # Reduce retries per strategy
+                        'socket_timeout': 15,
+                        'retries': 0,  # No retries per strategy to fail fast
+                        'fragment_retries': 0,
+                        'skip_unavailable_fragments': True,
+                        'geo_bypass': True,
+                        'no_check_certificate': True,
                         'extractor_args': strategy['extractor_args'],
                         'http_headers': strategy['http_headers']
                     }
